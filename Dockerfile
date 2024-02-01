@@ -1,6 +1,11 @@
-FROM node:14.13.1
-MAINTAINER Ives van Hoorne
+FROM node:19-alpine as build
+WORKDIR /app
+COPY . .
 
-RUN mkdir /usr/src/app
+RUN yarn
 
-WORKDIR /usr/src/app
+RUN yarn build
+
+USER node
+
+CMD ["node", "./packages/git-extractor/dist/index.js"]

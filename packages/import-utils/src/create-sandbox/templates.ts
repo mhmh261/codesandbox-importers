@@ -39,6 +39,7 @@ export function getMainFile(template: ITemplate) {
 }
 
 const SANDBOX_CONFIG = "sandbox.config.json";
+const TEMPLATE_CONFIG = ".codesandbox/template.json";
 const MAX_CLIENT_DEPENDENCY_COUNT = 50;
 
 type Dependencies = { [name: string]: string };
@@ -60,6 +61,26 @@ export function getTemplate(
         return config.template;
       }
     } catch (e) {}
+  }
+
+  const templateConfig =
+    modules[TEMPLATE_CONFIG] || modules[`/${TEMPLATE_CONFIG}`];
+  if (templateConfig && templateConfig.type !== "directory") {
+    try {
+      const config = JSON.parse(templateConfig.content);
+
+      if (config.runtime) {
+        return config.runtime;
+      }
+    } catch (e) {}
+  }
+
+  if (
+    ".codesandbox/Dockerfile" in modules ||
+    ".devcontainer/devcontainer.json" in modules
+  ) {
+    // We should return "cloud" here, once the server supports it.
+    return "node";
   }
 
   if (!pkg) {
@@ -147,6 +168,14 @@ export function getTemplate(
     return "node";
   }
 
+  if (totalDependencies.indexOf("vanjs-core") > -1) {
+    return "node";
+  }
+
+  if (totalDependencies.indexOf("mini-van-plate") > -1) {
+    return "node";
+  }
+
   // CLIENT
 
   if (moduleNames.some((m) => m.endsWith(".re"))) {
@@ -173,7 +202,11 @@ export function getTemplate(
     return "styleguidist";
   }
 
-  if (totalDependencies.indexOf("react-scripts") > -1) {
+  if (
+    totalDependencies.some((dependency) =>
+      /^(@[\w-]+\/)?react-scripts$/.test(dependency)
+    )
+  ) {
     return "create-react-app";
   }
 
@@ -197,6 +230,16 @@ export function getTemplate(
   }
 
   if (totalDependencies.indexOf("vite") > -1) {
+    if (totalDependencies.indexOf("react-redux") > -1) {
+      // Pretty bad hack to ensure that the examples of Redux
+      // still run in the old embed: https://github.com/codesandbox/codesandbox-client/issues/8282
+      //
+      // We should remove this once either:
+      // 1. the existing embed works with VMs
+      // 2. our new embeds support all query params
+      return "create-react-app";
+    }
+
     return "node";
   }
 

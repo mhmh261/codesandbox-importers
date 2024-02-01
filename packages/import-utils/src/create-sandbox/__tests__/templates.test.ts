@@ -15,6 +15,20 @@ describe("template detection", () => {
     ).toEqual("create-react-app");
   });
 
+  it("detects a react template from forked create-react-app", () => {
+    expect(
+      getTemplate(
+        {
+          dependencies: {},
+          devDependencies: {
+            "@fork/react-scripts": "latest",
+          },
+        },
+        {}
+      )
+    ).toEqual("create-react-app");
+  });
+
   it("detects a nuxt template", () => {
     expect(
       getTemplate(
@@ -22,6 +36,20 @@ describe("template detection", () => {
           dependencies: {},
           devDependencies: {
             nuxt: "latest",
+          },
+        },
+        {}
+      )
+    ).toEqual("nuxt");
+  });
+
+  it("detects a nuxt template when using nuxt3", () => {
+    expect(
+      getTemplate(
+        {
+          dependencies: {},
+          devDependencies: {
+            nuxt3: "latest",
           },
         },
         {}
